@@ -1242,7 +1242,7 @@ mod tests {
     fn truncate_respects_budget() {
         assert_eq!(truncate("hello", 10), "hello");
         assert_eq!(truncate("hello", 5), "hello");
-        assert_eq!(truncate("hello", 4), "hel…");
+        assert_eq!(truncate("abcde", 4), "abc…");
         assert_eq!(truncate("hello", 1), "…");
         assert_eq!(truncate("hello", 0), "");
     }

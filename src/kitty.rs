@@ -88,8 +88,13 @@ pub fn locate(
             Some(pid) => pid,
             None => return Reach::NoProcess,
         },
-        Provider::Codex if let Some(pid) = crate::registry::pid_of(provider, session_id) => pid,
         Provider::Codex => {
+            if let Some(pid) = crate::registry::pid_of(provider, session_id) {
+                return match window_of(pid) {
+                    Ok(w) => Reach::Ready(w),
+                    Err(r) => r,
+                };
+            }
             let elsewhere = crate::registry::claimed_elsewhere(provider, session_id);
             let here: Vec<procs::AgentProc> = procs::agents()
                 .into_iter()

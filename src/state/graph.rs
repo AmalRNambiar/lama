@@ -152,7 +152,7 @@ fn build_content(info: &AgentInfo, model: &SessionModel, id: &str, at: &Placemen
 }
 
 /// Where a model's agents land in a flow. The default is a lone session: ids
-/// as the model has them, roots unparented. The plane puts several sessions
+/// as the model has them, roots without a parent. The plane puts several sessions
 /// on one canvas by giving each an id prefix and hanging its roots from a hub.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Placement<'a> {

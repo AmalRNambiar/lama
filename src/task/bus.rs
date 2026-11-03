@@ -574,7 +574,9 @@ fn tool(name: &str, description: &str, properties: Value, required: &[&str]) -> 
     })
 }
 
-#[cfg(test)]
+// Tasks reach agents through kitty or tmux and use Unix paths, so their
+// tests run where those do; Windows has neither.
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
 

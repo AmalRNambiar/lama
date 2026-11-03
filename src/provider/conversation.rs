@@ -536,7 +536,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("lama-conv-partial-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("s.jsonl");
-        std::fs::write(&path, r#"{"type":"user","message":{"content":"hel"#).unwrap();
+        std::fs::write(&path, r#"{"type":"user","message":{"content":"hi th"#).unwrap();
         let mut c = Conversation::new(Provider::Claude, path.clone());
         assert!(!c.refresh());
         use std::io::Write;
@@ -544,8 +544,8 @@ mod tests {
             .append(true)
             .open(&path)
             .unwrap();
-        writeln!(f, r#"lo"}}}}"#).unwrap();
+        writeln!(f, r#"ere"}}}}"#).unwrap();
         assert!(c.refresh());
-        assert_eq!(c.turns, vec![Turn::User("hello".into())]);
+        assert_eq!(c.turns, vec![Turn::User("hi there".into())]);
     }
 }
