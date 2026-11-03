@@ -1,0 +1,122 @@
+[workspace]
+# The browser frontend (`lama-web`, in web/wasm/) is deliberately NOT a
+# member: it can only be *compiled* for wasm32, not merely targeted at it.
+# rataflow gates its ratzilla `From` impls on
+# `all(feature = "ratzilla", target_arch = "wasm32")`, so a host-target check of
+# that crate fails to typecheck. As a member it would be host-checked by
+# `cargo check --workspace` and, more to the point, by rust-analyzer — which
+# would sit on two permanent phantom errors in the editor. Excluding it makes it
+# resolve as its own workspace (see the `[workspace]` table in its manifest),
+# with its own lockfile and target dir. Build it with trunk
+# (`web/scripts/build-wasm.sh`).
+exclude = ["web/wasm"]
+
+[package]
+name = "lama"
+version = "0.2.0"
+edition = "2024"
+# Inherited from ratatui 0.30, which is the floor: nothing in this crate's own
+# source needs anything newer. Verified by the `msrv` job in CI.
+rust-version = "1.88"
+description = "Terminal UI that visualizes Claude Code and Codex agent sessions as a live flow graph."
+authors = ["Amal R Nambiar <amalrnambiarlive@gmail.com>", "Furkan Kalaycioglu"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/AmalRNambiar/lama"
+homepage = "https://github.com/AmalRNambiar/lama"
+documentation = "https://github.com/AmalRNambiar/lama#readme"
+keywords = ["claude-code", "codex", "tui", "agents", "visualization"]
+categories = ["command-line-utilities", "development-tools", "visualization"]
+# An allow-list, not a deny-list: state what the crate ships and everything else
+# stays out by default. The inverse leaks — anything added to the repo later
+# (recordings, web fonts, an OG image) silently ends up in the tarball until
+# someone audits it. Nothing here is compiled in: `assets/` belongs to the site
+# and the browser frontend (which is what `include_str!`s the demo fixture), and
+# the GIFs and tapes are ~5MB of recordings this crate never reads.
+# Cargo adds Cargo.toml and Cargo.lock on its own.
+include = ["/src/**/*.rs", "/README.md", "/LICENSE"]
+
+[features]
+default = ["native"]
+# The native frontend: terminal (crossterm backend), async runtime (tokio), and
+# filesystem tailing. Code gated `#[cfg(feature = "native")]`. Turn it OFF
+# (`default-features = false`) for the portable core alone — the model, the
+# timeline, the graph projection, the UI rendering and the providers, with
+# no runtime and no IO of its own (discovery touches the disk only when a
+# feeder asks it to). That is what the browser frontend (`lama-web`) depends on.
+native = [
+  "dep:tokio",
+  "dep:crossterm",
+  "dep:futures",
+  "dep:anyhow",
+  "ratatui/crossterm",
+  "rataflow/crossterm",
+]
+
+[dependencies]
+# Portable core (native + wasm): model, timeline, graph, UI rendering, parsing.
+ratatui = { version = "0.30", default-features = false }
+# Resolved from crates.io, not by path: rataflow is its own repository, so any
+# path would name a directory that exists only on the machine that wrote it —
+# not in CI, not in a clone. To build against a local rataflow, override it per
+# machine in `.cargo/config.toml` instead of editing this line:
+#     [patch.crates-io]
+#     rataflow = { path = "/your/path/to/rataflow" }
+rataflow = { version = "0.1.0", default-features = false, features = [
+  "sugiyama",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde", "clock"] }
+# Instant/SystemTime that work on wasm (perf.now) and re-export std on native.
+web-time = "1"
+# Display-column measurement for truncation/wrapping (CJK/emoji are 2 columns
+# wide; char counts under-measure them). Already in the tree via ratatui.
+unicode-width = "0.2"
+
+# Native-only (pulled in by the `native` feature).
+crossterm = { version = "0.29", features = ["event-stream"], optional = true }
+# `rt-multi-thread` is load-bearing, not a default: the tailer reads with
+# blocking `std::fs` (see tailer/bytes.rs) from inside its async task, so a
+# `current_thread` runtime would stall the UI loop on every poll.
+tokio = { version = "1", features = [
+  "rt-multi-thread",
+  "macros",
+  "time",
+  "sync",
+], optional = true }
+futures = { version = "0.3", optional = true }
+anyhow = { version = "1", optional = true }
+# Persistent collections: cloning a `SessionModel` shares structure instead of
+# copying it, which is what makes a snapshot ladder rung O(1).
+imbl = "7.0.1"
+
+# The library's own wasm requirement, independent of any frontend: chrono needs
+# its wasm time binding for `Utc::now()` to work in-browser. A browser backend
+# is the frontend crate's business, so depending on this library from wasm
+# imposes none.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+chrono = { version = "0.4", features = ["wasmbind"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+sysinfo = { version = "0.38.4", default-features = false, features = ["system"] }
+
+[[bin]]
+# The crate is `lama`; the command you type is `lama`.
+name = "lama"
+path = "src/main.rs"
+# Native terminal binary — skipped by a `--no-default-features` build.
+required-features = ["native"]
+
+[dev-dependencies]
+criterion = { version = "0.8.2", features = ["html_reports"] }
+
+# Baselines for the parse -> timeline -> fold -> seek pipeline, over synthetic
+# sessions (benches/common).
+[[bench]]
+name = "timeline"
+harness = false
+
+[[bench]]
+name = "memory"
+harness = false

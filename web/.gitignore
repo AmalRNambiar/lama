@@ -1,0 +1,11 @@
+# dependencies & build output
+node_modules/
+dist/
+.astro/
+
+# generated wasm bundle (produced by `pnpm build:wasm`)
+public/wasm/
+
+# misc
+.DS_Store
+*.log

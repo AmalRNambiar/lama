@@ -1,0 +1,70 @@
+# Its own workspace, not a member of the one at the repo root. This crate only
+# compiles for wasm32 (rataflow's ratzilla `From` impls are gated on that arch),
+# so being a member would mean permanent phantom errors in any editor that
+# host-checks the workspace. The root manifest excludes it to match.
+[workspace]
+
+[package]
+# The browser frontend. Never published: it is an application, not a
+# library, and it only ever builds for wasm32 (see the deps below). crates.io
+# gets `lama` alone — lib + the `lama` terminal binary.
+name = "lama-web"
+# Inert on purpose. Nothing resolves this crate by version — it is deployed, not
+# depended on — so bumping it would be a number that tracks nothing. The version
+# that means something is `lama`'s, and the site ships whatever the deploy
+# built. If the page ever needs to *show* a version, read the library's
+# (`lama::VERSION`), not this one.
+version = "0.0.0"
+edition = "2024"
+description = "Browser frontend for lama — the Claude Code and Codex session visualizer."
+license = "MIT"
+publish = false
+
+[[bin]]
+# Trunk names its artifacts after the bin (`web.js` / `web_bg.wasm`), and the
+# Astro /app route imports those paths — keep this name stable.
+name = "web"
+path = "src/main.rs"
+
+[dependencies]
+# The portable core: model, timeline, graph, UI rendering, parsing. Default
+# features off drops the native frontend (tokio/crossterm/fs), which has no
+# meaning in a browser.
+lama = { path = "../..", default-features = false }
+# ratatui's wasm WebGl2 backend + mouse/key events.
+ratzilla = "0.3.1"
+# `ratzilla` feature: the ratzilla -> rataflow event `From` impls and
+# `Flow::handle_wheel` (normalized wheel-zoom) this frontend drives directly.
+# Resolved from crates.io, for the same reason as in the root manifest.
+# `lama` above is a path dependency because it lives in this repository.
+rataflow = { version = "0.1.0", default-features = false, features = [
+  "sugiyama",
+  "ratzilla",
+] }
+ratatui = { version = "0.30", default-features = false }
+# Instant that reads perf.now() in the browser.
+web-time = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+console_error_panic_hook = "0.1"
+wasm-bindgen = "0.2"
+# The wheel listener.
+web-sys = { version = "0.3", features = [
+  "Window",
+  "Document",
+  "Element",
+  "EventTarget",
+  "WheelEvent",
+] }
+# ratzilla force-enables ratatui's `layout-cache`, whose global cache is guarded
+# by `critical-section`. wasm32-unknown-unknown has no default impl, so linking
+# fails on `_critical_section_1_0_acquire` — the `std` feature registers one
+# (single-threaded wasm never contends). The impl has to be picked by the final
+# binary, so it is declared here rather than in the library.
+critical-section = { version = "1", features = ["std"] }
+
+# critical-section is linked, not called: the `std` feature registers the impl
+# that ratatui-core's layout cache needs on wasm32. Nothing references it by
+# name, so a source scan reads it as unused.
+[package.metadata.cargo-machete]
+ignored = ["critical-section"]

@@ -1,0 +1,13 @@
+# The whole cargo configuration for the browser frontend, in one place: trunk
+# runs from this directory, so discovery starts here and no mirrored copies are
+# needed elsewhere in the repo.
+#
+# This crate can only be compiled for wasm32 — rataflow gates its ratzilla `From`
+# impls on `all(feature = "ratzilla", target_arch = "wasm32")`, the same way
+# ratatui gates termion on `not(windows)`. Cargo has no stable way for a package
+# to declare that (`per-package-target` is nightly-only), so the default target
+# is set here: `cargo build`/`clippy` need no `--target`, and an editor analyzing
+# the crate picks up the same default instead of host-checking it.
+[build]
+target = "wasm32-unknown-unknown"
+

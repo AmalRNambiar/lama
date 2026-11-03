@@ -1,0 +1,41 @@
+---
+// Override Starlight's <Head> to also load the brand display font (Space Mono)
+// on every docs page, so headings match the landing. Renders the built-in Head
+// first, then appends the Astro Fonts <style>/<link> for `--font-display`.
+import Default from '@astrojs/starlight/components/Head.astro';
+import { Font } from 'astro:assets';
+import Analytics from './Analytics.astro';
+import Schema from './Schema.astro';
+
+// Starlight already emits og:title/type/url/locale/description and declares
+// twitter:card=summary_large_image on every docs page — but it ships no image,
+// so those pages advertised a large-image card with nothing in it. Only the
+// image is added here; the rest would duplicate Starlight's own tags.
+const ogImage = Astro.site ? new URL('/og.png', Astro.site).href : undefined;
+const IMAGE_ALT =
+  'The lama terminal UI: a Claude Code session drawn as a flow graph of agent nodes, with a prompt timeline along the bottom.';
+---
+
+<Default {...Astro.props} />
+<Analytics />
+<Schema />
+<Font cssVariable="--font-display" preload />
+{/* Starlight's `favicon` option emits the SVG and only the SVG. Google reads a
+    site's favicon off the home page, so the docs pages are not what fixed the
+    search result — these are here so a tab, a bookmark and an iOS home screen
+    get the same icon everywhere rather than only on the two bespoke pages. */}
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+{
+  ogImage && (
+    <>
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={IMAGE_ALT} />
+      <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image:alt" content={IMAGE_ALT} />
+    </>
+  )
+}

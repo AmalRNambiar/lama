@@ -1,0 +1,49 @@
+---
+// Canonical + social meta for the two hand-built pages (the landing and /app).
+// The docs pages don't use this: Starlight emits its own title/description/OG
+// from frontmatter, and StarlightHead.astro only tops it up with the card image.
+//
+// Both URLs are absolute and derived from `site` in astro.config. og:image
+// especially: crawlers do not resolve it against the page, and a relative one
+// is simply dropped. Building it from `site` also means it can never point at a
+// preview deploy.
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+
+const canonical = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).href
+  : undefined;
+const ogImage = Astro.site ? new URL("/og.png", Astro.site).href : undefined;
+
+const IMAGE_ALT =
+  "The lama terminal UI: a Claude Code session drawn as a flow graph of agent nodes, with a prompt timeline along the bottom.";
+---
+
+{canonical && <link rel="canonical" href={canonical} />}
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="lama" />
+{canonical && <meta property="og:url" content={canonical} />}
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{
+  ogImage && (
+    <>
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={IMAGE_ALT} />
+    </>
+  )
+}
+
+{/* summary_large_image, not summary: `summary` renders a small square crop,
+    which turns a 1200x630 screenshot of a graph into an unreadable tile. */}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+{ogImage && <meta name="twitter:image" content={ogImage} />}
+{ogImage && <meta name="twitter:image:alt" content={IMAGE_ALT} />}

@@ -1,0 +1,14 @@
+/target
+# The browser frontend resolves as its own workspace (it is wasm32-only, so it
+# cannot be a member of this one — see the [workspace] comment in Cargo.toml),
+# which means it gets its own target dir rather than sharing /target.
+/web/wasm/target
+/dist
+/.playwright-mcp
+.DS_Store
+
+# VHS insists on an Output even when only a Screenshot is wanted (assets/og.tape).
+tmp-*.gif
+
+# Working notes, not part of what ships.
+/TODO.md

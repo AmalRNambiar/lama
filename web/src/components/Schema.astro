@@ -1,0 +1,51 @@
+---
+// Structured data, mirroring rataflow's — see that file for the reasoning.
+//
+// SoftwareApplication here, not SoftwareSourceCode: lama is a program you
+// install and run, where rataflow is a library you build against. That choice
+// is what `applicationCategory` and `operatingSystem` describe, and it is why
+// an `offers` block (free) makes sense on this one and not on the crate.
+const SITE = Astro.site?.href.replace(/\/$/, "") ?? "";
+
+const graph = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${SITE}/#software`,
+      name: "lama",
+      description:
+        "A terminal UI that visualizes Claude Code and Codex agent sessions as a live flow graph. Replay a finished transcript or follow a running one. Zero network IO; nothing leaves your machine.",
+      keywords:
+        "Claude Code, Codex, coding agent, session viewer, transcript replay, subagents, flow graph, terminal UI",
+      url: SITE,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "macOS, Linux, Windows",
+      codeRepository: "https://github.com/AmalRNambiar/lama",
+      author: { "@id": `${SITE}/#author` },
+      image: `${SITE}/og.png`,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    },
+    {
+      "@type": "Person",
+      "@id": `${SITE}/#author`,
+      name: "Amal R Nambiar",
+      url: "https://github.com/AmalRNambiar",
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE}/#website`,
+      url: SITE,
+      name: "lama",
+      publisher: { "@id": `${SITE}/#author` },
+    },
+  ],
+};
+
+const json = JSON.stringify(graph)
+  .replace(/</g, "\\u003c")
+  .replace(/>/g, "\\u003e")
+  .replace(/&/g, "\\u0026");
+---
+
+<script type="application/ld+json" is:inline set:html={json} />

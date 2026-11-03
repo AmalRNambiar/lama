@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://amalrnambiar.github.io/lama/sitemap-index.xml

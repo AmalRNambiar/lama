@@ -1,0 +1,162 @@
+/* lama brand theme for Starlight.
+ *
+ * Palette lifted straight from the TUI / logo: a near-black terminal canvas,
+ * a single gold accent (#d7af00), a "running" green (#87d787), and the dim/bright
+ * grays the agent cards use. Monospace for anything that's part of the brand
+ * voice (wordmark, headings, glyphs); the readable system sans for body copy.
+ */
+
+:root {
+  --lama-gold: #d7af00;
+  --lama-gold-bright: #f0d56a;
+  --lama-green: #87d787;
+  --lama-ink: #0f0f0f;
+  --lama-panel: #1c1c1c;
+  --lama-dim: #585858;
+  --lama-bright: #e6e6e6;
+  --lama-mono: ui-monospace, "SF Mono", "Fira Code", "JetBrains Mono",
+    Menlo, Consolas, monospace;
+}
+
+/* ── Dark theme (the default, and the one the brand is built around) ───────── */
+/* Scoped to [data-theme='dark'] ONLY — Starlight always sets data-theme, so a
+ * combined `:root` selector here would leak dark backgrounds into light mode. */
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #3a2f00;
+  --sl-color-accent: #d7af00;
+  --sl-color-accent-high: #f0d56a;
+
+  --sl-color-white: #f4f4f4;
+  --sl-color-gray-1: #e4e4e4;
+  --sl-color-gray-2: #c2c2c2;
+  --sl-color-gray-3: #9a9a9a;
+  --sl-color-gray-4: #585858;
+  --sl-color-gray-5: #343434;
+  --sl-color-gray-6: #1f1f1f;
+  --sl-color-black: #121212;
+
+  --sl-color-bg: #121212;
+  --sl-color-bg-nav: #161616cc;
+  --sl-color-bg-sidebar: #151515;
+  --sl-color-bg-inline-code: #262626;
+  --sl-color-hairline-shade: #262626;
+  --sl-color-text-accent: var(--lama-gold);
+}
+
+/* ── Light theme (tidy, secondary) — fully self-contained so nothing leaks ─── */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #f6ecc2;
+  --sl-color-accent: #8a6b00;
+  --sl-color-accent-high: #5c4700;
+
+  --sl-color-white: #1a1a1a;
+  --sl-color-gray-1: #25252a;
+  --sl-color-gray-2: #3a3a40;
+  --sl-color-gray-3: #5c5c66;
+  --sl-color-gray-4: #7a7a85;
+  --sl-color-gray-5: #c4c4cc;
+  --sl-color-gray-6: #ececef;
+  --sl-color-gray-7: #f6f6f8;
+  --sl-color-black: #ffffff;
+
+  --sl-color-bg: #fbfaf6;
+  --sl-color-bg-nav: #fbfaf6cc;
+  --sl-color-bg-sidebar: #f4f2ea;
+  --sl-color-bg-inline-code: #efe9d2;
+  --sl-color-hairline-shade: #e7e3d6;
+  --sl-color-text-accent: #8a6b00;
+}
+
+/* ── Brand voice: monospace headings + wordmark ───────────────────────────── */
+.site-title,
+h1, h2, h3,
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3 {
+  /* Space Mono (loaded via StarlightHead.astro); mono stack as graceful fallback. */
+  font-family: var(--font-display, var(--lama-mono));
+  letter-spacing: -0.01em;
+}
+
+/* The header wordmark image carries the brand; give it a touch of glow on dark. */
+:root[data-theme='dark'] .site-title img {
+  filter: drop-shadow(0 0 18px rgba(215, 175, 0, 0.18));
+}
+
+/* Inline code + code blocks read as terminal output. */
+code, kbd, pre, .sl-markdown-content code {
+  font-family: var(--lama-mono);
+}
+
+/* Keyboard keys (the keys table) styled like physical caps. */
+.sl-markdown-content kbd {
+  background: var(--lama-panel);
+  border: 1px solid var(--sl-color-gray-5);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0.1em 0.45em;
+  font-size: 0.85em;
+  color: var(--lama-bright);
+}
+
+/* ── Splash landing: dotted-grid canvas, like the logo background ──────────── */
+.hero {
+  position: relative;
+}
+[data-has-hero] .hero > img,
+[data-has-hero] .hero .hero-html {
+  filter: drop-shadow(0 0 40px rgba(215, 175, 0, 0.12));
+}
+
+/* Dotted grid behind the hero on the splash page (matches assets/lama.svg). */
+[data-has-hero] main {
+  background-image: radial-gradient(
+    rgba(120, 120, 120, 0.16) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  background-position: center top;
+}
+
+/* Hero title: gold, mono, with a steady terminal cursor. */
+.hero h1 {
+  color: var(--lama-bright);
+}
+.hero .tagline {
+  color: var(--sl-color-gray-2);
+}
+
+/* Primary CTA in lama gold; secondary stays minimal. */
+.hero .actions a[data-variant='primary'] {
+  background: var(--lama-gold);
+  border-color: var(--lama-gold);
+  color: #1a1500;
+  font-family: var(--lama-mono);
+  font-weight: 600;
+}
+.hero .actions a[data-variant='primary']:hover {
+  background: var(--lama-gold-bright);
+  border-color: var(--lama-gold-bright);
+}
+
+/* ── Feature cards: a gold rule on the leading edge, terminal-card feel ────── */
+.sl-markdown-content .card {
+  border-color: var(--sl-color-gray-5);
+  border-inline-start: 2px solid var(--lama-gold);
+  background: color-mix(in srgb, var(--sl-color-bg) 70%, var(--lama-panel));
+}
+.sl-markdown-content .card .icon {
+  color: var(--lama-gold);
+}
+
+/* Status-glyph helpers usable inside prose (●/◌/✓/✗ in the brand colors). */
+.glyph-run { color: var(--lama-green); }
+.glyph-gold { color: var(--lama-gold); }
+.glyph-dim { color: var(--lama-dim); }
+
+/* Screenshots: framed like a terminal window. */
+.sl-markdown-content img:not(.site-title img) {
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 8px;
+  background: var(--lama-ink);
+}

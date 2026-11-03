@@ -1,0 +1,129 @@
+<svg viewBox="0 0 560 238" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern id="dots" width="18.06" height="18" patternUnits="userSpaceOnUse"><circle cx="9" cy="9" r="1.05" fill="#585858"/></pattern>
+</defs>
+<rect width="560" height="238" rx="6" fill="#121212"/>
+<rect x="6" y="18" width="548" height="212" fill="url(#dots)" opacity="0.4"/>
+<rect x="15.1" y="19" width="231.8" height="71" rx="5" fill="#1c1c1c"/>
+<rect x="42.2" y="109" width="186.7" height="71" rx="5" fill="#1c1c1c"/>
+<rect x="313.1" y="109" width="222.8" height="71" rx="5" fill="#1c1c1c"/>
+<text x="0.0" y="14" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╭</text>
+<text x="9.03" y="14" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">────────────────────────</text>
+<text x="225.82" y="14" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" font-weight="bold" xml:space="preserve">┤ </text>
+<text x="243.89" y="14" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" font-weight="bold" xml:space="preserve">lama</text>
+<text x="307.12" y="14" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" font-weight="bold" xml:space="preserve"> ├</text>
+<text x="325.19" y="14" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">─────────────────────────</text>
+<text x="551.01" y="14" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╮</text>
+<text x="0.0" y="32" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="32" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="68" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="68" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="86" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="86" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="104" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="104" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="176" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="176" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="194" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="551.01" y="194" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="0.0" y="212" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╰────────────────────────────────────────────────────────────╯</text>
+<text x="18.07" y="32" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╭ </text>
+<text x="36.13" y="32" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" font-weight="bold" xml:space="preserve">main</text>
+<text x="72.26" y="32" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve"> ─────────────────╮</text>
+<text x="18.07" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="234.86" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="27.1" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#87d787" xml:space="preserve">●</text>
+<text x="45.16" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" xml:space="preserve">opus-4</text>
+<text x="180.66" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" xml:space="preserve">↑</text>
+<text x="18.07" y="68" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="234.86" y="68" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="27.1" y="68" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" xml:space="preserve">❯</text>
+<text x="45.16" y="68" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" xml:space="preserve">Edit</text>
+<text x="198.73" y="68" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">×14</text>
+<text x="18.07" y="86" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╰───────────────────────╯</text>
+<text x="45.16" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╭ </text>
+<text x="63.23" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" font-weight="bold" xml:space="preserve">tester</text>
+<text x="117.43" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve"> ──────────╮</text>
+<text x="45.16" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="216.79" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="54.2" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#87d787" xml:space="preserve">✓</text>
+<text x="72.26" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" xml:space="preserve">haiku</text>
+<text x="45.16" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="216.79" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="54.2" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" xml:space="preserve">❯</text>
+<text x="72.26" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" xml:space="preserve">Bash</text>
+<text x="189.69" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">×3</text>
+<text x="45.16" y="176" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╰──────────────────╯</text>
+<text x="316.15" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╭─ </text>
+<text x="343.25" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" font-weight="bold" xml:space="preserve">explorer</text>
+<text x="415.52" y="122" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve"> ───────────╮</text>
+<text x="316.15" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="523.91" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="325.19" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#87d787" xml:space="preserve">●</text>
+<text x="343.25" y="140" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" xml:space="preserve">sonnet</text>
+<text x="316.15" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="523.91" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">│</text>
+<text x="343.25" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d0d0d0" xml:space="preserve">Grep</text>
+<text x="316.15" y="176" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">╰──────────────────────╯</text>
+<circle cx="238.86" cy="64" r="2.6" fill="#d7af00"/>
+<circle cx="91.33" cy="90" r="2.6" fill="#d7af00"/>
+<circle cx="91.33" cy="109" r="2.6" fill="#d7af00"/>
+<circle cx="314.15" cy="136" r="2.6" fill="#d7af00"/>
+<text x="198.73" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" opacity="1" xml:space="preserve">6.1k<animate attributeName="opacity" values="1;0;0" keyTimes="0;0.3333;0.6667" calcMode="discrete" dur="2.7s" repeatCount="indefinite"/></text>
+<text x="198.73" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" opacity="0" xml:space="preserve">6.4k<animate attributeName="opacity" values="0;1;0" keyTimes="0;0.3333;0.6667" calcMode="discrete" dur="2.7s" repeatCount="indefinite"/></text>
+<text x="198.73" y="50" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" opacity="0" xml:space="preserve">6.7k<animate attributeName="opacity" values="0;0;1" keyTimes="0;0.3333;0.6667" calcMode="discrete" dur="2.7s" repeatCount="indefinite"/></text>
+<circle cx="31.1" cy="46" r="3.0" fill="#87d787"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/><animate attributeName="r" values="3.0;4.2;3.0" dur="1.5s" repeatCount="indefinite"/></circle>
+<circle cx="329.19" cy="136" r="3.0" fill="#87d787"><animate attributeName="opacity" values="1;0.3;1" dur="1.1s" repeatCount="indefinite"/><animate attributeName="r" values="3.0;4.2;3.0" dur="1.1s" repeatCount="indefinite"/></circle>
+<text x="325.19" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" xml:space="preserve">◌<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.55;0.6" dur="3.2s" repeatCount="indefinite"/></text>
+<text x="325.19" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#87d787" opacity="0" xml:space="preserve">✓<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.55;0.6;0.95;1" dur="3.2s" repeatCount="indefinite"/></text>
+<text x="451.65" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">×7<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.58;0.62;1" dur="3.2s" repeatCount="indefinite"/></text>
+<text x="451.65" y="158" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" opacity="0" xml:space="preserve">×8<animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.58;0.62;1" dur="3.2s" repeatCount="indefinite"/></text>
+<path d="M 238.86 64 L 283 64 Q 289 64 289 70 L 289 130 Q 289 136 295 136 L 314.15 136" fill="none" stroke="#d7af00" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 7" opacity="0.9"><animate attributeName="stroke-dashoffset" values="0;-24" dur="0.9s" repeatCount="indefinite"/></path>
+<path d="M 91.33 90 L 91.33 109" fill="none" stroke="#d7af00" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 7" opacity="0.9"><animate attributeName="stroke-dashoffset" values="0;-24" dur="0.9s" repeatCount="indefinite"/></path>
+<g>
+ <animateMotion path="M 238.86 64 L 283 64 Q 289 64 289 70 L 289 130 Q 289 136 295 136 L 314.15 136" dur="3.6s" repeatCount="indefinite"/>
+ <animate attributeName="opacity" values="0;1;1;1;0" keyTimes="0;0.1;0.5;0.9;1" dur="3.6s" repeatCount="indefinite"/>
+ <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0;0 2;0 0" dur="0.7s" repeatCount="indefinite"/>
+   <g transform="scale(0.46)" stroke-linejoin="round">
+     <!-- hover thruster glow -->
+     <ellipse cx="0" cy="20" rx="13" ry="4" fill="#d7af00" opacity="0.35">
+       <animate attributeName="opacity" values="0.35;0.12;0.35" dur="0.5s" repeatCount="indefinite"/>
+       <animate attributeName="rx" values="13;9;13" dur="0.5s" repeatCount="indefinite"/></ellipse>
+     <!-- antenna -->
+     <line x1="0" y1="-20" x2="0" y2="-30" stroke="#9aa0ab" stroke-width="2.4"/>
+     <circle cx="0" cy="-32" r="3.4" fill="#d7af00">
+       <animate attributeName="opacity" values="1;0.2;1" dur="0.6s" repeatCount="indefinite"/></circle>
+     <!-- arms -->
+     <g><animateTransform attributeName="transform" type="rotate" values="-8 -17 2;8 -17 2;-8 -17 2" dur="0.7s" repeatCount="indefinite"/>
+       <rect x="-25" y="-2" width="9" height="5" rx="2.5" fill="#7c828d"/></g>
+     <g><animateTransform attributeName="transform" type="rotate" values="8 17 2;-8 17 2;8 17 2" dur="0.7s" repeatCount="indefinite"/>
+       <rect x="16" y="-2" width="9" height="5" rx="2.5" fill="#7c828d"/></g>
+     <!-- head/body -->
+     <rect x="-18" y="-19" width="36" height="34" rx="9" fill="#8b8f9a"/>
+     <rect x="-18" y="-19" width="36" height="13" rx="9" fill="#a7abb5"/>
+     <!-- face screen -->
+     <rect x="-13" y="-12" width="26" height="19" rx="5" fill="#121212"/>
+     <circle cx="-6" cy="-3" r="3.1" fill="#d7af00"><animate attributeName="opacity" values="1;0.4;1" dur="0.9s" repeatCount="indefinite"/></circle>
+     <circle cx="6" cy="-3" r="3.1" fill="#d7af00"><animate attributeName="opacity" values="1;0.4;1" dur="0.9s" repeatCount="indefinite"/></circle>
+     <rect x="-5" y="3" width="10" height="2" rx="1" fill="#6a5a12"/>
+     <!-- little feet -->
+     <rect x="-12" y="14" width="8" height="4" rx="2" fill="#6f7783"/>
+     <rect x="4" y="14" width="8" height="4" rx="2" fill="#6f7783"/>
+   </g></g></g>
+<clipPath id="spk"><rect x="18.1" y="180" width="514.9" height="18"/></clipPath>
+<g clip-path="url(#spk)"><text x="18.1" y="194" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7af00" xml:space="preserve">▆ ▃  █ ▂▅ ▇  ▄ ▁ ▆▃  █  ▂ ▅▇▄ ▆ ▃  ▇ ▂  ▅ █▄ ▃ ▆  ▂▇ ▄  ▅ ▃ ▆ ▃  █ ▂▅ ▇  ▄ ▁ ▆▃  █  ▂ ▅▇▄ ▆ ▃  ▇ ▂  ▅ █▄ ▃ ▆  ▂▇ ▄  ▅ ▃ ▆ ▃  █ ▂▅ ▇  ▄ ▁ ▆▃  █  ▂ ▅▇▄ ▆ ▃  ▇ ▂  ▅ █▄ ▃ ▆  ▂▇ ▄  ▅ ▃<animateTransform attributeName="transform" type="translate" values="0 0;-541.8 0" dur="6s" repeatCount="indefinite"/></text></g>
+<text x="18.07" y="212" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">├─────────────────────────────────────────────────────────┤</text>
+<text x="108.4" y="212" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7875f" xml:space="preserve">❋<animate attributeName="opacity" values="1;0.35;1" dur="1.6s" repeatCount="indefinite"/></text>
+<text x="252.92" y="212" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#585858" xml:space="preserve">»»»</text>
+<text x="361.32" y="212" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d75f5f" xml:space="preserve">✗</text>
+<text x="451.65" y="212" font-family="DejaVu Sans Mono, monospace" font-size="15" fill="#d7875f" xml:space="preserve">❋<animate attributeName="opacity" values="1;0.35;1" dur="1.6s" repeatCount="indefinite"/></text>
+<g><animateTransform attributeName="transform" type="translate" values="45.2 0;505.9 0;45.2 0" keyTimes="0;0.5;1" dur="7s" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" repeatCount="indefinite"/><rect x="-0.8" y="180" width="1.8" height="37" fill="#d7af00" opacity="0.9"/><path d="M -4 179 L 4 179 L 0 185 Z" fill="#d7af00"/></g>
+</svg>

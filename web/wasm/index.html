@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/fira_code.min.css"
+    />
+    <!-- Resolve the wasm's libm `env` imports (fmod/round) to a JS shim. Must
+         precede the wasm module script so the specifier resolves. -->
+    <script type="importmap">
+      { "imports": { "env": "/wasm/env.js" } }
+    </script>
+    <link data-trunk rel="copy-file" href="env.js" />
+    <!-- Build the `lama-web` frontend crate (whose manifest sits next to
+         this entry point) for wasm, optimized. It depends on the lama
+         library with default features off, so no feature flags are needed here. -->
+    <link
+      data-trunk
+      rel="rust"
+      href="Cargo.toml"
+      data-bin="web"
+      data-wasm-opt="z"
+    />
+    <title>lama — Claude Code session visualizer</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #1c1c1c;
+        overflow: hidden;
+      }
+      /* The WebGl2 backend fills this container. */
+      #terminal-container {
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="terminal-container"></div>
+  </body>
+</html>

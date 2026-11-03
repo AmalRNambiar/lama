@@ -1,0 +1,63 @@
+<svg viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="lama: a slitted drum with a session graph inside it">
+<!--
+  Not a mascot — a device. The drum from above: sixteen ticks for the slits you
+  look through, and inside them the thing you see, which is a session drawn as a
+  graph (main agent on top, the subagent and tool it spawned below, wired with
+  step edges because rataflow draws them).
+
+  The ticks are also the clock. A replay is paced by the transcript's own
+  timestamps, so the run so far is gold and the leading tick is longer and
+  brighter — the playhead. It is the same reading either way round: how far the
+  drum has turned, how far into the session you are.
+
+  Geometry, not glyphs, for the same reason as rataflow's mark: it has to hold
+  at 16px without a font. Palette is the site's — ink #121212, panel #1c1c1c,
+  gold #d7af00, dim #585858, green #87d787 for "still running".
+-->
+<defs>
+  <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+    <circle cx="10" cy="10" r="1.2" fill="#585858"/>
+  </pattern>
+</defs>
+
+<rect width="220" height="150" rx="10" fill="#121212"/>
+<rect width="220" height="150" rx="10" fill="url(#dots)" opacity="0.4"/>
+
+<!-- The drum wall, radius 58 about (110,75). The slits are gaps in the wall
+     rather than marks on it, which is the difference between a lama and a
+     sunburst — the first version drew them as radial ticks and read as rays.
+     One path, starting at twelve o'clock, so the dash phase is fixed there and
+     the gold arc below can reuse it and land on the same slits: 24 slits over a
+     circumference of 364.4, hence the 10.2/4.98 period. -->
+<g fill="none" stroke-width="7" stroke-dasharray="10.2 4.98">
+  <path d="M110 17 A 58 58 0 1 1 110 133 A 58 58 0 1 1 110 17" stroke="#585858"/>
+  <!-- The run so far: a third of the way round, ending on a slit boundary. -->
+  <path d="M110 17 A 58 58 0 0 1 160.2 104" stroke="#d7af00" opacity="0.55"/>
+</g>
+<!-- The playhead at the end of that arc. It spans the wall's full thickness and
+     stops there: parked outside it read as a chip of the ring that had come
+     off, and any longer it reaches into the graph and skewers a node. -->
+<line x1="110" y1="5" x2="110" y2="21" stroke="#d7af00" stroke-width="5.5" stroke-linecap="round" transform="rotate(120 110 75)"/>
+
+<!-- The session inside the drum: the main agent, and the subagent and tool it
+     spawned. Sized to leave clearance at the corners — the children's outer
+     corners sit at radius 49 against an inner wall of 54.5. The agent is the
+     live one, so it carries the border colour and the green dot. -->
+<g fill="none" stroke="#585858" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M110 59 V70 H83.5 V85"/>
+  <path d="M110 59 V70 H136.5 V85"/>
+</g>
+
+<rect x="91" y="43" width="38" height="16" rx="3.5" fill="#1c1c1c" stroke="#d7af00" stroke-width="2"/>
+<circle cx="100" cy="51" r="2.8" fill="#87d787"/>
+<rect x="107" y="49.8" width="16" height="2.4" rx="1.2" fill="#d0d0d0" opacity="0.65"/>
+
+<g fill="#1c1c1c" stroke="#585858" stroke-width="2">
+  <rect x="68" y="85" width="31" height="16" rx="3.5"/>
+  <rect x="121" y="85" width="31" height="16" rx="3.5"/>
+</g>
+<g fill="#585858">
+  <rect x="75" y="91.8" width="17" height="2.4" rx="1.2"/>
+  <rect x="128" y="91.8" width="17" height="2.4" rx="1.2"/>
+</g>
+</svg>

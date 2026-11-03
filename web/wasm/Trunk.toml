@@ -1,0 +1,14 @@
+# Builds this crate (the `lama-web` browser frontend) into `web/public/wasm/`
+# for the Astro /app route. Paths below are relative to this file's directory,
+# which is also the crate root — trunk runs from here, so cargo's config
+# discovery starts here too (see .cargo/config.toml).
+#
+# filehash = false keeps the artifact names stable (web.js / web_bg.wasm) so the
+# /app page can import them without a build-time hash lookup. public_url = "/wasm/"
+# is where they're served from under the Astro site root.
+[build]
+target = "index.html"
+dist = "../public/wasm"
+public_url = "/wasm/"
+filehash = false
+release = true
