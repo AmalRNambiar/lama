@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.1 - 2026-11-04
+
+### Added
+
+- **Ask who runs a task up front**: with both Claude Code and Codex installed,
+  the intake asks who runs the task's agents (Claude, Codex, or the
+  conductor's pick) as you hand it over, so the team launches without waiting
+  on you.
+- **The conductor can ask for tools**: a tool outside its read-only set no
+  longer gets refused silently. The intake shows what it wants to run; `y`
+  allows it, `n` refuses, or type why not.
+
+### Fixed
+
+- CI passes on Linux, macOS and Windows, on the MSRV, and for the wasm build.
+
 ## 0.2.0 - 2026-11-03
 
 The first public release of lama, a fork of
