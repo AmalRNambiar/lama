@@ -435,6 +435,14 @@ impl Store {
             .filter(|a| self.answer_of(&a.id).is_none())
             .collect()
     }
+    /// Whether you already allowed this very use in this task: the
+    /// conductor asking again (a retry) isn't asked of you twice.
+    pub fn allowed_before(&self, tool: &str, input: &serde_json::Value) -> bool {
+        read_lines::<Approval>(&self.path("approvals.jsonl"))
+            .iter()
+            .filter(|a| a.tool == tool && same_use(&a.input, input))
+            .any(|a| self.answer_of(&a.id).is_some_and(|x| x.allow))
+    }
     pub fn answer_of(&self, id: &str) -> Option<Answer> {
         valid_name(id).then(|| self.read_json(&format!("answer-{id}.json")))?
     }
@@ -444,6 +452,19 @@ impl Store {
         }
         self.write_json(&format!("answer-{id}.json"), a)
     }
+}
+
+/// Two inputs for the same use: a command's description, which Claude
+/// rewords on a retry, doesn't count.
+fn same_use(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+    let strip = |v: &serde_json::Value| {
+        let mut v = v.clone();
+        if let Some(o) = v.as_object_mut() {
+            o.remove("description");
+        }
+        v
+    };
+    strip(a) == strip(b)
 }
 
 fn read_lines<T: for<'de> Deserialize<'de>>(path: &Path) -> Vec<T> {

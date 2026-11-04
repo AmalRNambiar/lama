@@ -472,12 +472,16 @@ impl Bus {
     /// `wait`.
     fn approve(&self, args: &Value, wait: std::time::Duration) -> Result<String, String> {
         let input = args.get("input").cloned().unwrap_or(json!({}));
+        let tool = str_arg(args, "tool_name")?;
+        if self.store.allowed_before(tool, &input) {
+            return Ok(json!({"behavior": "allow", "updatedInput": input}).to_string());
+        }
         let nanos = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_nanos());
         let a = Approval {
             id: format!("a{:x}", nanos as u64),
-            tool: str_arg(args, "tool_name")?.to_string(),
+            tool: tool.to_string(),
             input: input.clone(),
         };
         self.store.ask_approval(&a).map_err(|e| e.to_string())?;
@@ -802,6 +806,21 @@ mod tests {
         };
         c.store.answer("a1", &yes).unwrap();
         assert!(c.store.open_approvals().is_empty());
+
+        // Allowed once, the same command (reworded) isn't asked again.
+        let a3 = Approval {
+            id: "a3".into(),
+            tool: "Bash".into(),
+            input: json!({"command": "sentry issue view 1", "description": "Read it"}),
+        };
+        c.store.ask_approval(&a3).unwrap();
+        c.store.answer("a3", &yes).unwrap();
+        let again = json!({"tool_name": "Bash",
+            "input": {"command": "sentry issue view 1", "description": "Read the issue"}});
+        let reply: Value =
+            serde_json::from_str(&c.approve(&again, std::time::Duration::ZERO).unwrap()).unwrap();
+        assert_eq!(reply["behavior"], "allow");
+        assert!(c.store.open_approvals().is_empty(), "nothing was asked");
 
         let mut worker = bus("approve-worker", "api");
         let (err, _) = call(&mut worker, "approve", ask);

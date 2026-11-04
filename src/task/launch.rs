@@ -124,6 +124,9 @@ fn exe() -> Result<String, String> {
     Ok(exe.strip_suffix(" (deleted)").unwrap_or(exe).to_string())
 }
 
+/// Every tool of the lama bus, which workers use without asking.
+const BUS_TOOLS: &str = "mcp__lama";
+
 /// What the conductor may use without asking: it reads, runs read-only
 /// commands and talks over the bus, and never edits. It has no terminal to
 /// ask in, so anything else goes to you through the bus's `approve` tool,
@@ -263,6 +266,11 @@ fn codex_conductor_args(
         format!("mcp_servers.lama.command={}", toml_string(exe)),
         "-c".into(),
         format!("mcp_servers.lama.args=[{}]", list.join(",")),
+        "-c".into(),
+        format!(
+            "mcp_servers.lama.default_tools_approval_mode={}",
+            toml_string("approve")
+        ),
     ]);
     if resume {
         a.extend([session.into(), prompt.into()]);
@@ -280,6 +288,8 @@ fn claude_args(session: &str, model: &str, mcp: &Path, system: &str, prompt: &st
     }
     a.extend([
         format!("--mcp-config={}", mcp.display()),
+        // The bus is lama's own: its tools need no asking.
+        format!("--allowed-tools={BUS_TOOLS}"),
         "--append-system-prompt".into(),
         system.into(),
         prompt.into(),
@@ -300,6 +310,11 @@ fn codex_args(model: &str, exe: &str, bus: &[String], prompt: &str) -> Vec<Strin
         format!("mcp_servers.lama.command={}", toml_string(exe)),
         "-c".into(),
         format!("mcp_servers.lama.args=[{}]", list.join(",")),
+        "-c".into(),
+        format!(
+            "mcp_servers.lama.default_tools_approval_mode={}",
+            toml_string("approve")
+        ),
         prompt.into(),
     ]);
     a
@@ -540,6 +555,8 @@ fn claude_resume_args(session: &str, model: &str, mcp: &Path, system: &str) -> V
     }
     a.extend([
         format!("--mcp-config={}", mcp.display()),
+        // The bus is lama's own: its tools need no asking.
+        format!("--allowed-tools={BUS_TOOLS}"),
         "--append-system-prompt".into(),
         system.into(),
     ]);
@@ -556,6 +573,11 @@ fn codex_resume_args(session: &str, model: &str, exe: &str, bus: &[String]) -> V
         format!("mcp_servers.lama.command={}", toml_string(exe)),
         "-c".into(),
         format!("mcp_servers.lama.args=[{}]", list.join(",")),
+        "-c".into(),
+        format!(
+            "mcp_servers.lama.default_tools_approval_mode={}",
+            toml_string("approve")
+        ),
     ];
     if !model.is_empty() {
         a.extend(["-c".into(), format!("model={}", toml_string(model))]);
@@ -713,6 +735,7 @@ mod tests {
                 "--model",
                 "sonnet",
                 "--mcp-config=/m/mcp-api.json",
+                "--allowed-tools=mcp__lama",
                 "--append-system-prompt",
                 "SYS",
                 "go now"
@@ -733,6 +756,8 @@ mod tests {
                 r#"mcp_servers.lama.command="/opt/la\"ma""#,
                 "-c",
                 r#"mcp_servers.lama.args=["bus","--task","m1","--agent","qa"]"#,
+                "-c",
+                r#"mcp_servers.lama.default_tools_approval_mode="approve""#,
                 "two words"
             ]
         );
@@ -749,8 +774,12 @@ mod tests {
             a[3],
             r#"mcp_servers.lama.args=["bus","--task","t1","--agent","api"]"#
         );
-        assert_eq!(a[5], r#"model="gpt-5""#);
-        assert_eq!(&a[6..], ["resume", "s-9"]);
+        assert_eq!(
+            a[5],
+            r#"mcp_servers.lama.default_tools_approval_mode="approve""#
+        );
+        assert_eq!(a[7], r#"model="gpt-5""#);
+        assert_eq!(&a[8..], ["resume", "s-9"]);
     }
 
     #[test]
@@ -762,6 +791,7 @@ mod tests {
                 "--resume",
                 "s-1",
                 "--mcp-config=/t/mcp-api.json",
+                "--allowed-tools=mcp__lama",
                 "--append-system-prompt",
                 "be the API owner"
             ]

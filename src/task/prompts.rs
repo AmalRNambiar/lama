@@ -51,7 +51,8 @@ pasted.\n"
         }
         Provider::Claude => {
             "A tool you may not use unasked goes to the user, who answers in lama: wait for it. \
-If they say no, go on without it.\n"
+If they say no, go on without it. If a command they allowed fails, don't run it again or a \
+variant of it: end your turn with one line giving the error and what to paste instead.\n"
         }
     };
     let providers = provider_rule(have, team);

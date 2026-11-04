@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.2 - 2026-11-04
+
+### Changed
+
+- **Task agents use the lama bus without asking**: Claude workers start with
+  the bus's tools allowed, and Codex workers with them approved, so a new task
+  no longer asks you to allow `send`, `report` and the rest. Everything else
+  still asks.
+
+### Fixed
+
+- A command you allowed the conductor in a task isn't asked about again when
+  it retries it, and an allowed command that fails comes back to you as one
+  line with the error instead of another prompt.
+- A permission prompt left open by a conductor turn that ended is closed
+  instead of shown.
+
 ## 0.2.1 - 2026-11-04
 
 ### Added

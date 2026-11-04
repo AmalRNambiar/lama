@@ -824,11 +824,25 @@ impl Runner {
         !owners.is_empty() && owners.iter().all(|o| self.finished.contains(*o))
     }
 
-    /// The oldest tool the conductor is waiting for you to allow: its turn
-    /// still running, so a prompt left over from one that died isn't shown.
+    /// The oldest tool the conductor is waiting for you to allow. Prompts
+    /// left open by a turn that has ended are closed, not shown: answering
+    /// one would reach nobody.
     fn waiting_approval(&mut self) -> Option<Approval> {
-        let a = self.store.open_approvals().into_iter().next()?;
-        self.conductor_busy().then_some(a)
+        let open = self.store.open_approvals();
+        if open.is_empty() {
+            return None;
+        }
+        if self.conductor_busy() {
+            return open.into_iter().next();
+        }
+        let gone = super::Answer {
+            allow: false,
+            note: "the conductor's turn ended".into(),
+        };
+        for a in &open {
+            let _ = self.store.answer(&a.id, &gone);
+        }
+        None
     }
 
     /// The conductor ended its turn without a plan and with words: it needs
