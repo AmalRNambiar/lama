@@ -8,7 +8,8 @@ use serde_json::{Value, json};
 use std::io::{BufRead, Write};
 
 use super::{
-    CONDUCTOR, Goal, Kind, Message, Plan, PlannedAgent, Request, Start, Store, valid_name,
+    Answer, Approval, CONDUCTOR, Goal, Kind, Message, Plan, PlannedAgent, Request, Start, Store,
+    valid_name,
 };
 
 /// The protocol version offered when the client names none.
@@ -17,6 +18,9 @@ const DEFAULT_PROTOCOL: &str = "2025-06-18";
 const MAX_TEXT: usize = 2000;
 const MAX_AGENTS: usize = 12;
 const DEFAULT_INBOX: usize = 20;
+/// How long the conductor waits on your answer to a tool it asked for
+/// before it goes on without it. lama raises Claude's MCP timeout past it.
+pub const APPROVAL_WAIT: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 
 const INSTRUCTIONS: &str = "The lama bus connects you to your teammates in this task. \
 Use `roster` to see the team and goals, `send` to message a teammate, the conductor or \"all\", \
@@ -173,8 +177,8 @@ impl Bus {
         if self.conductor() {
             tools.push(tool(
                 "propose_plan",
-                "Dispatch the task: one owner per project it touches. lama asks the user who \
-                 runs them, then launches them.",
+                "Dispatch the task: one owner per project it touches. lama launches them on \
+                 whoever the user picked to run them.",
                 json!({
                     "summary": {"type": "string", "description":
                         "What the team will do and why this split."},
@@ -208,6 +212,16 @@ impl Bus {
                 }),
                 &["summary", "agents", "goals"],
             ));
+            tools.push(tool(
+                "approve",
+                "lama's permission prompt: Claude Code calls it, not you.",
+                json!({
+                    "tool_name": {"type": "string"},
+                    "input": {"type": "object"},
+                    "tool_use_id": {"type": "string"},
+                }),
+                &["tool_name", "input"],
+            ));
         }
         tools
     }
@@ -224,7 +238,7 @@ impl Bus {
 
     /// `None` for a tool that does not exist (for this agent).
     fn call(&self, name: &str, args: &Value) -> Option<Result<String, String>> {
-        if name == "propose_plan" && !self.conductor() {
+        if matches!(name, "propose_plan" | "approve") && !self.conductor() {
             return Some(Err(format!("{name} is only for the conductor")));
         }
         if matches!(name, "report" | "request_agent" | "set_goal") && !self.owner() {
@@ -235,6 +249,7 @@ impl Bus {
             "inbox" => Ok(self.inbox(args)),
             "roster" => Ok(self.roster()),
             "propose_plan" => self.propose_plan(args),
+            "approve" => self.approve(args, APPROVAL_WAIT),
             "report" => self.report(args),
             "request_agent" => self.request_agent(args),
             "set_goal" => self.set_goal(args),
@@ -446,9 +461,52 @@ impl Bus {
         self.store.set_plan(&plan).map_err(|e| e.to_string())?;
         self.store.set_goals(&goals).map_err(|e| e.to_string())?;
         Ok(format!(
-            "Dispatched (plan v{version}). lama asks the user who runs the owners, then launches \
-             them. Your job is done: end your turn now."
+            "Dispatched (plan v{version}). lama launches the owners on whoever the user picked \
+             to run them. Your job is done: end your turn now."
         ))
+    }
+
+    /// The conductor's permission prompt (`--permission-prompt-tool`): the
+    /// ask goes to lama, which shows it in the intake, and the conductor
+    /// waits here for your answer — or goes on without the tool after
+    /// `wait`.
+    fn approve(&self, args: &Value, wait: std::time::Duration) -> Result<String, String> {
+        let input = args.get("input").cloned().unwrap_or(json!({}));
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos());
+        let a = Approval {
+            id: format!("a{:x}", nanos as u64),
+            tool: str_arg(args, "tool_name")?.to_string(),
+            input: input.clone(),
+        };
+        self.store.ask_approval(&a).map_err(|e| e.to_string())?;
+        let started = std::time::Instant::now();
+        let answer = loop {
+            if let Some(answer) = self.store.answer_of(&a.id) {
+                break answer;
+            }
+            if started.elapsed() >= wait {
+                let late = Answer {
+                    allow: false,
+                    note: "the user didn't answer in time".into(),
+                };
+                let _ = self.store.answer(&a.id, &late);
+                break late;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        };
+        let reply = if answer.allow {
+            json!({"behavior": "allow", "updatedInput": input})
+        } else {
+            let why = if answer.note.trim().is_empty() {
+                "The user said no.".to_string()
+            } else {
+                format!("The user said no: {}", answer.note.trim())
+            };
+            json!({"behavior": "deny", "message": why})
+        };
+        Ok(reply.to_string())
     }
 
     fn report(&self, args: &Value) -> Result<String, String> {
@@ -699,6 +757,55 @@ mod tests {
         assert!(!a.writes);
         let (err, _) = call(&mut owner, "request_agent", peer);
         assert!(err, "a name is taken once");
+    }
+
+    #[test]
+    fn the_conductor_waits_on_your_answer_to_a_tool() {
+        let c = bus("approve", CONDUCTOR);
+        let store = c.store.clone();
+        let answering = std::thread::spawn(move || {
+            loop {
+                if let Some(a) = store.open_approvals().pop() {
+                    assert_eq!(a.describe(), "run `git log`");
+                    let no = Answer {
+                        allow: false,
+                        note: "use rg".into(),
+                    };
+                    store.answer(&a.id, &no).unwrap();
+                    return;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+        });
+        let ask = json!({"tool_name": "Bash", "input": {"command": "git log"}});
+        let wait = std::time::Duration::from_secs(10);
+        let reply: Value = serde_json::from_str(&c.approve(&ask, wait).unwrap()).unwrap();
+        answering.join().unwrap();
+        assert_eq!(reply["behavior"], "deny");
+        assert_eq!(reply["message"], "The user said no: use rg");
+        assert!(c.store.open_approvals().is_empty());
+
+        // Unanswered, it gives up and says so; a yes passes the input on.
+        let reply: Value =
+            serde_json::from_str(&c.approve(&ask, std::time::Duration::ZERO).unwrap()).unwrap();
+        assert_eq!(reply["behavior"], "deny");
+        let a = Approval {
+            id: "a1".into(),
+            tool: "Bash".into(),
+            input: json!({}),
+        };
+        c.store.ask_approval(&a).unwrap();
+        assert_eq!(c.store.open_approvals().len(), 1);
+        let yes = Answer {
+            allow: true,
+            note: String::new(),
+        };
+        c.store.answer("a1", &yes).unwrap();
+        assert!(c.store.open_approvals().is_empty());
+
+        let mut worker = bus("approve-worker", "api");
+        let (err, _) = call(&mut worker, "approve", ask);
+        assert!(err, "only the conductor's prompts come through here");
     }
 
     #[test]

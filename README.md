@@ -173,11 +173,13 @@ Open as many as you like. Zoomed out, each one shrinks to its latest exchange.
 Press `t` and hand lama a task: a Sentry issue, a Jira ticket, a pasted error, or a
 plain sentence.
 
-1. A **conductor** agent reads it in the background (headless, read-only tools) and
+1. With both CLIs installed, lama asks right away who runs the task's agents: `1`
+   Claude, `2` Codex, `3` the conductor picks per agent. You can then walk away.
+2. A **conductor** agent reads it in the background (headless, read-only tools) and
    decides which of your projects it touches. It writes a self-contained brief for
-   each project's **owner** agent.
-2. You choose who runs each owner: `←` `→` switches an owner between Claude and Codex,
-   `1` / `2` / `3` sets all to Claude / all to Codex / as planned. `⏎` launches.
+   each project's **owner** agent. If it wants a tool outside its read-only set, it
+   waits for you: the intake shows what it wants to run, `y` allows it, `n` refuses,
+   or type why not. If it can't read the source, it asks you in the intake too.
 3. lama starts each owner in its own tab. Every agent that writes code gets its own
    **git worktree and branch** (`<project>/.lama/worktrees/`, branch
    `lama/<task>/<name>`), so nothing touches your checkout.

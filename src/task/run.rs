@@ -8,7 +8,8 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use super::{
-    CONDUCTOR, Goal, Kind, Launched, Message, Plan, Start, Store, Tail, launch, valid_name,
+    Approval, CONDUCTOR, Goal, Kind, Launched, Message, Plan, Start, Store, Tail, Team, launch,
+    valid_name,
 };
 use crate::provider::Provider;
 use crate::provider::conversation::{Conversation, Turn, TurnState, turn_state};
@@ -70,6 +71,10 @@ pub struct Runner {
     conductor_sought: Option<Instant>,
     /// The agents this machine has, for who may run the team.
     agents: crate::agents::Installed,
+    /// Who runs the team, as you said when you gave the task.
+    team: Team,
+    /// A tool the conductor waits for you to allow.
+    pub approval: Option<Approval>,
     /// Every message so far, with when it appeared (secs since start).
     pub messages: Vec<(Message, f64)>,
     pub plan: Option<Plan>,
@@ -112,8 +117,9 @@ impl Runner {
         source: &str,
         projects: Vec<PathBuf>,
         conductor: Provider,
+        team: Team,
     ) -> Result<Runner, String> {
-        let store = launch::new_task(source, conductor).map_err(|e| e.to_string())?;
+        let store = launch::new_task(source, conductor, team).map_err(|e| e.to_string())?;
         let mut r = Runner::open(store, projects).ok_or("the task didn't save")?;
         r.first_turn = true;
         r.begin();
@@ -160,6 +166,8 @@ impl Runner {
             ),
             conductor_sought: None,
             agents: crate::agents::installed(),
+            team: m.team,
+            approval: None,
             messages: Vec::new(),
             plan: store.plan(),
             goals: store.goals(),
@@ -203,8 +211,11 @@ impl Runner {
         }
         r.reqs
             .read::<super::Request>(&r.store.dir.join("requests.jsonl"));
-        // A team proposed but not yet given to anyone still waits for you.
-        r.choosing = r.plan.as_ref().is_some_and(|p| !p.approved);
+        // A team proposed but not yet launched still waits for you, or
+        // launches on who you picked.
+        if r.plan.as_ref().is_some_and(|p| !p.approved) {
+            r.dispatched();
+        }
         Some(r)
     }
 
@@ -296,8 +307,45 @@ impl Runner {
         }
     }
 
-    /// A note you typed into the intake, for the conductor's next turn.
+    /// The conductor dispatched: launch the team on who you picked, or ask.
+    fn dispatched(&mut self) {
+        match self.team {
+            Team::Ask => self.choosing = true,
+            Team::On(p) => self.choose(Some(p)),
+            Team::AsPlanned => self.choose(None),
+        }
+    }
+
+    /// Your answer to the tool the conductor waits on.
+    pub fn answer(&mut self, allow: bool, note: &str) -> Result<(), String> {
+        let Some(a) = self.approval.take() else {
+            return Err("the conductor isn't waiting on anything".into());
+        };
+        self.asking = None;
+        let answer = super::Answer {
+            allow,
+            note: note.to_string(),
+        };
+        self.store
+            .answer(&a.id, &answer)
+            .map_err(|e| e.to_string())?;
+        let said = if allow { "allowed" } else { "refused" };
+        self.note(format!("◈ {said}: {}", trim_to(&a.describe(), 60)));
+        Ok(())
+    }
+
+    /// A note you typed into the intake, for the conductor's next turn —
+    /// or, while it waits on a tool, your answer: yes allows it, anything
+    /// else refuses it and says why.
     pub fn say(&mut self, text: &str) -> Result<(), String> {
+        if self.approval.is_some() {
+            let t = text.trim();
+            return match t.to_lowercase().as_str() {
+                "y" | "yes" | "allow" | "ok" => self.answer(true, ""),
+                "n" | "no" | "deny" => self.answer(false, ""),
+                _ => self.answer(false, t),
+            };
+        }
         self.asking = None;
         self.queue(
             CONDUCTOR,
@@ -670,11 +718,11 @@ impl Runner {
             {
                 self.planned_at = self.secs();
             }
-            // A new plan waits for you to say who runs it.
-            if !p.approved {
-                self.choosing = true;
-            }
+            let fresh = !p.approved;
             self.plan = Some(p);
+            if fresh {
+                self.dispatched();
+            }
         }
         self.goals = self.store.goals();
         let reqs: Vec<super::Request> = self.reqs.read(&self.store.dir.join("requests.jsonl"));
@@ -684,7 +732,11 @@ impl Runner {
                 && let Some(mut plan) = self.plan.clone().filter(|p| p.approved)
                 && !plan.agents.iter().any(|a| a.name == peer.name)
             {
-                let to = self.agents.or_other(peer.provider).unwrap_or(peer.provider);
+                let want = match self.team {
+                    Team::On(p) => p,
+                    _ => peer.provider,
+                };
+                let to = self.agents.or_other(want).unwrap_or(want);
                 run_on(&mut peer, to);
                 plan.agents.push(peer);
                 let _ = self.store.set_plan(&plan);
@@ -747,7 +799,11 @@ impl Runner {
             self.messages.push((m, now));
         }
         self.deliver();
-        self.asking = self.question();
+        self.approval = self.waiting_approval();
+        self.asking = match &self.approval {
+            Some(a) => Some(format!("May the conductor {}?", a.describe())),
+            None => self.question(),
+        };
         if self.done() {
             let _ = std::fs::write(self.store.dir.join("done"), "");
         }
@@ -766,6 +822,13 @@ impl Runner {
             })
             .collect();
         !owners.is_empty() && owners.iter().all(|o| self.finished.contains(*o))
+    }
+
+    /// The oldest tool the conductor is waiting for you to allow: its turn
+    /// still running, so a prompt left over from one that died isn't shown.
+    fn waiting_approval(&mut self) -> Option<Approval> {
+        let a = self.store.open_approvals().into_iter().next()?;
+        self.conductor_busy().then_some(a)
     }
 
     /// The conductor ended its turn without a plan and with words: it needs
@@ -1093,6 +1156,7 @@ impl Runner {
             tasks: vec![self.row()],
             conductor: self.conductor_view(),
             asking: self.asking.clone(),
+            approving: self.approval.is_some(),
             chat: chat
                 .into_iter()
                 .map(|(who, text)| v::ChatLine {
@@ -1219,6 +1283,7 @@ mod tests {
                 created: chrono::Utc::now(),
                 conductor_session: "s".into(),
                 conductor_provider: Provider::Claude,
+                team: Team::Ask,
             })
             .unwrap();
         store.set_plan(&plan).unwrap();
@@ -1269,6 +1334,51 @@ mod tests {
             .unwrap();
         let again = Runner::open(Store::at(reopened.store.dir.clone()), Vec::new()).unwrap();
         assert!(!again.choosing, "an approved team doesn't ask");
+    }
+
+    #[test]
+    fn a_team_picked_up_front_launches_without_asking() {
+        let plan = Plan {
+            version: 42,
+            summary: String::new(),
+            agents: vec![agent("a", Provider::Codex, "")],
+            approved: false,
+        };
+        let r = runner_with(plan);
+        let mut t = r.store.task().unwrap();
+        t.team = Team::On(Provider::Claude);
+        r.store.set_task(&t).unwrap();
+        let store = Store::at(r.store.dir.clone());
+        drop(r);
+        let r = Runner::open(store, Vec::new()).unwrap();
+        let p = r.store.plan().unwrap();
+        assert!(p.approved && !r.choosing, "nothing left to ask");
+        assert_eq!(p.agents[0].provider, Provider::Claude);
+    }
+
+    #[test]
+    fn your_line_answers_a_conductor_waiting_on_a_tool() {
+        let mut r = runner_with(Plan {
+            version: 43,
+            summary: String::new(),
+            agents: vec![],
+            approved: false,
+        });
+        let ask = |r: &mut Runner, id: &str| {
+            r.approval = Some(Approval {
+                id: id.into(),
+                tool: "Bash".into(),
+                input: serde_json::json!({"command": "git log"}),
+            });
+        };
+        ask(&mut r, "a1");
+        r.say("yes").unwrap();
+        assert!(r.store.answer_of("a1").unwrap().allow && r.approval.is_none());
+        ask(&mut r, "a2");
+        r.say("use the API instead").unwrap();
+        let no = r.store.answer_of("a2").unwrap();
+        assert!(!no.allow && no.note == "use the API instead");
+        assert!(r.pending.is_empty(), "an answer isn't a note for later");
     }
 
     #[test]

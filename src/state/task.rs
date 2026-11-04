@@ -44,6 +44,9 @@ pub struct TaskView {
     /// The conductor stopped to ask you something (a ticket it can't read):
     /// its question, shown in the intake; your next line answers it.
     pub asking: Option<String>,
+    /// The question is a tool the conductor waits for you to allow: y or n
+    /// answers it.
+    pub approving: bool,
     /// A plan is waiting for you to choose who runs it: Claude, Codex, or
     /// as planned.
     pub choosing: bool,

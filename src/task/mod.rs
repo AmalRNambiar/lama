@@ -15,6 +15,8 @@
 //!   later (a reviewer once there is code to review).
 //! - `goals.json` — what "done" means, ticked off by the conductor.
 //! - `agents.json` — what lama launched: name → session, window, worktree.
+//! - `approvals.jsonl` — tools the conductor asked you to allow, each
+//!   answered in its own `answer-<id>.json`.
 //!
 //! The bus only ever writes inside this directory; launching, typing into
 //! windows and creating worktrees stay with lama.
@@ -47,6 +49,23 @@ pub struct Task {
     /// Who conducts. Tasks from before Codex could conduct are Claude's.
     #[serde(default = "claude")]
     pub conductor_provider: Provider,
+    /// Who runs the team, as you said when you gave the task.
+    #[serde(default)]
+    pub team: Team,
+}
+
+/// Who runs a task's agents.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum Team {
+    /// Not said yet: lama asks once the conductor has dispatched. Tasks
+    /// from before you said it up front.
+    #[default]
+    Ask,
+    /// Every agent on this one.
+    On(Provider),
+    /// Each agent on whatever the conductor planned it on.
+    AsPlanned,
 }
 
 fn claude() -> Provider {
@@ -153,6 +172,38 @@ pub struct Request {
     /// launches it in that owner's project.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent: Option<PlannedAgent>,
+}
+
+/// A tool the conductor wants to use that it may not use unasked: it waits
+/// on your answer, since it has no terminal of its own to ask in.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Approval {
+    pub id: String,
+    pub tool: String,
+    pub input: serde_json::Value,
+}
+
+impl Approval {
+    /// The ask in one line: a command as typed, anything else as its tool
+    /// and input.
+    pub fn describe(&self) -> String {
+        match self
+            .input
+            .get("command")
+            .and_then(serde_json::Value::as_str)
+        {
+            Some(cmd) if self.tool == "Bash" => format!("run `{cmd}`"),
+            _ => format!("use {} {}", self.tool, self.input),
+        }
+    }
+}
+
+/// Your answer to an [`Approval`]; a refusal can say why.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Answer {
+    pub allow: bool,
+    #[serde(default)]
+    pub note: String,
 }
 
 /// One thing that has to be true for the task to be done.
@@ -373,6 +424,25 @@ impl Store {
     }
     pub fn requests(&self) -> Vec<Request> {
         read_lines(&self.path("requests.jsonl"))
+    }
+    pub fn ask_approval(&self, a: &Approval) -> std::io::Result<()> {
+        self.append("approvals.jsonl", a)
+    }
+    /// The approvals not answered yet, oldest first.
+    pub fn open_approvals(&self) -> Vec<Approval> {
+        read_lines::<Approval>(&self.path("approvals.jsonl"))
+            .into_iter()
+            .filter(|a| self.answer_of(&a.id).is_none())
+            .collect()
+    }
+    pub fn answer_of(&self, id: &str) -> Option<Answer> {
+        valid_name(id).then(|| self.read_json(&format!("answer-{id}.json")))?
+    }
+    pub fn answer(&self, id: &str, a: &Answer) -> std::io::Result<()> {
+        if !valid_name(id) {
+            return Err(std::io::Error::other("not an approval id"));
+        }
+        self.write_json(&format!("answer-{id}.json"), a)
     }
 }
 

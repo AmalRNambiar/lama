@@ -9,8 +9,9 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::Duration;
 
-use super::{CONDUCTOR, Launched, PlannedAgent, Store, Task, prompts, root, valid_name};
+use super::{CONDUCTOR, Launched, PlannedAgent, Store, Task, Team, prompts, root, valid_name};
 use crate::kitty;
 use crate::provider::Provider;
 
@@ -52,12 +53,17 @@ fn task_id() -> std::io::Result<String> {
 }
 
 /// A new task for `source`, with its conductor's session id chosen.
-pub fn new_task(source: &str, conductor: Provider) -> std::io::Result<Store> {
+pub fn new_task(source: &str, conductor: Provider, team: Team) -> std::io::Result<Store> {
     let root = root().ok_or_else(|| std::io::Error::other("no home directory"))?;
-    new_task_in(&root, source, conductor)
+    new_task_in(&root, source, conductor, team)
 }
 
-fn new_task_in(root: &Path, source: &str, conductor: Provider) -> std::io::Result<Store> {
+fn new_task_in(
+    root: &Path,
+    source: &str,
+    conductor: Provider,
+    team: Team,
+) -> std::io::Result<Store> {
     std::fs::create_dir_all(root)?;
     // Creating the directory claims the id, so a collision retries rather
     // than sharing a task.
@@ -81,6 +87,7 @@ fn new_task_in(root: &Path, source: &str, conductor: Provider) -> std::io::Resul
             Provider::Codex => String::new(),
         },
         conductor_provider: conductor,
+        team,
     })?;
     Ok(store)
 }
@@ -117,9 +124,10 @@ fn exe() -> Result<String, String> {
     Ok(exe.strip_suffix(" (deleted)").unwrap_or(exe).to_string())
 }
 
-/// What the conductor may use without asking. It has no terminal to ask
-/// in, so anything else is refused: it reads, runs read-only commands and
-/// talks over the bus, and never edits.
+/// What the conductor may use without asking: it reads, runs read-only
+/// commands and talks over the bus, and never edits. It has no terminal to
+/// ask in, so anything else goes to you through the bus's `approve` tool,
+/// shown in the intake.
 const CONDUCTOR_TOOLS: &str = "Read,Grep,Glob,WebFetch,WebSearch,TodoWrite,mcp__lama,\
 Bash(sentry:*),Bash(gh:*),Bash(glab:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),\
 Bash(git status:*),Bash(git branch:*),Bash(rg:*),Bash(grep:*),Bash(ls:*),Bash(cat:*),\
@@ -138,7 +146,13 @@ pub fn run_conductor(
 ) -> Result<std::process::Child, String> {
     let task = store.task().ok_or("task.json is missing")?;
     let who = task.conductor_provider;
-    let system = prompts::conductor(&task.id, projects, who, crate::agents::installed());
+    let system = prompts::conductor(
+        &task.id,
+        projects,
+        who,
+        crate::agents::installed(),
+        task.team,
+    );
     let exe = exe()?;
     let args = match who {
         Provider::Claude => {
@@ -168,8 +182,11 @@ pub fn run_conductor(
         .open(store.dir.join("conductor.log"))
         .map_err(|e| e.to_string())?;
     let err = log.try_clone().map_err(|e| e.to_string())?;
+    let wait = super::bus::APPROVAL_WAIT + Duration::from_secs(60);
     Command::new(&line[0])
         .args(&line[1..])
+        // The bus holds a permission prompt open until you answer it.
+        .env("MCP_TOOL_TIMEOUT", wait.as_millis().to_string())
         .current_dir(&store.dir)
         .stdin(std::process::Stdio::null())
         .stdout(log)
@@ -202,6 +219,7 @@ fn conductor_args(
         format!("--mcp-config={}", mcp.display()),
         format!("--allowed-tools={CONDUCTOR_TOOLS}"),
         "--disallowed-tools=Edit,Write,NotebookEdit".into(),
+        "--permission-prompt-tool=mcp__lama__approve".into(),
     ];
     a.extend(
         projects
@@ -572,14 +590,14 @@ mod tests {
     #[test]
     fn a_new_task_has_its_conductor_session() {
         let root = temp("new");
-        let a = new_task_in(&root, "fix it", Provider::Claude).unwrap();
-        let b = new_task_in(&root, "fix it", Provider::Claude).unwrap();
+        let a = new_task_in(&root, "fix it", Provider::Claude, Team::Ask).unwrap();
+        let b = new_task_in(&root, "fix it", Provider::Claude, Team::Ask).unwrap();
         assert_ne!(a.dir, b.dir);
         let m = a.task().unwrap();
         assert_eq!((m.id, m.source.as_str()), (a.id(), "fix it"));
         assert_eq!(m.conductor_session.len(), 36);
         // Codex names its own session: none until it starts.
-        let c = new_task_in(&root, "fix it", Provider::Codex).unwrap();
+        let c = new_task_in(&root, "fix it", Provider::Codex, Team::Ask).unwrap();
         let m = c.task().unwrap();
         assert_eq!(m.conductor_provider, Provider::Codex);
         assert!(m.conductor_session.is_empty());

@@ -379,6 +379,12 @@ fn status_line(m: &TaskView, team: &[Member]) -> (String, Color, bool) {
         (format!("✓ done · {msgs} msgs"), palette.success, false)
     } else if m.choosing {
         ("◈ who runs this team?".to_string(), fx::yellow(), false)
+    } else if m.approving {
+        (
+            "◈ conductor asks to use a tool".to_string(),
+            fx::yellow(),
+            false,
+        )
     } else if m.asking.is_some() {
         ("◈ conductor needs you".to_string(), fx::yellow(), false)
     } else if working > 0 {
@@ -635,6 +641,8 @@ fn render_intake(buf: &mut Buffer, r: Rect, m: &TaskView, team: &[Member]) -> Op
         marker(buf, prompt_y, "›");
         let hint = if m.choosing {
             "pick the owners above"
+        } else if m.approving {
+            "y allow · n refuse · or type why not…"
         } else if m.asking.is_some() {
             "answer the conductor…"
         } else if started {

@@ -992,6 +992,17 @@ const DOUBLE_CLICK: Duration = Duration::from_millis(500);
 
 /// The plane's own input state: the consoles open on the canvas, which one
 /// takes the keyboard, and the last press, for telling a double-click.
+/// A question the intake asks before it starts a task.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Picking {
+    /// Which agent conducts tasks: both are installed and none was picked
+    /// yet.
+    Conductor,
+    /// Who runs this task's agents, with both installed; it is to be
+    /// conducted by the one held.
+    Team(crate::provider::Provider),
+}
+
 #[derive(Default)]
 struct PlaneInput {
     /// Open consoles by session id.
@@ -1004,9 +1015,9 @@ struct PlaneInput {
     /// Consoles closed while their agent was asking: not reopened for that
     /// same wait.
     dismissed: std::collections::HashSet<String>,
-    /// The intake is asking which agent conducts tasks (both are installed
-    /// and none was picked yet); its draft is the task that waits on it.
-    picking_conductor: bool,
+    /// What the intake asks before a task starts; its draft is the task
+    /// that waits on it.
+    picking: Option<Picking>,
     /// Each session's turn state when last seen, to catch working → done.
     turns_seen: std::collections::HashMap<String, crate::provider::conversation::TurnState>,
     /// Text being selected (or selected) in a console's history.
@@ -1448,12 +1459,24 @@ impl PlaneInput {
     fn intake_key(&mut self, key: &crossterm::event::KeyEvent, plane: &mut Plane, apps: &[App]) {
         use crate::provider::Provider;
         use crossterm::event::{KeyCode, KeyModifiers};
-        if self.picking_conductor {
-            match key.code {
-                KeyCode::Char('1') => self.pick_conductor(Provider::Claude, plane),
-                KeyCode::Char('2') => self.pick_conductor(Provider::Codex, plane),
-                KeyCode::Esc => {
-                    self.picking_conductor = false;
+        if let Some(picking) = self.picking {
+            use crate::task::Team;
+            match (picking, key.code) {
+                (Picking::Conductor, KeyCode::Char('1')) => {
+                    self.pick_conductor(Provider::Claude, plane);
+                }
+                (Picking::Conductor, KeyCode::Char('2')) => {
+                    self.pick_conductor(Provider::Codex, plane);
+                }
+                (Picking::Team(c), KeyCode::Char('1')) => {
+                    self.pick_team(c, Team::On(Provider::Claude), plane);
+                }
+                (Picking::Team(c), KeyCode::Char('2')) => {
+                    self.pick_team(c, Team::On(Provider::Codex), plane);
+                }
+                (Picking::Team(c), KeyCode::Char('3')) => self.pick_team(c, Team::AsPlanned, plane),
+                (_, KeyCode::Esc) => {
+                    self.picking = None;
                     if let Some(i) = self.intake.as_mut() {
                         i.notice = None;
                     }
@@ -1463,6 +1486,16 @@ impl PlaneInput {
             return;
         }
         let empty = self.intake.as_ref().is_some_and(|i| i.draft.is_empty());
+        // A conductor waiting on a tool: y allows it, n refuses it; typing
+        // a reason and Enter refuses it with that.
+        if empty
+            && let Some(r) = self.tasks.iter_mut().rev().find(|r| r.approval.is_some())
+            && let KeyCode::Char(c @ ('y' | 'n')) = key.code
+        {
+            let result = r.answer(c == 'y', "");
+            self.after_submit(result);
+            return;
+        }
         // A dispatched task waiting on you: ↑↓ pick an owner, ←→ or Space
         // switch it between Claude and Codex, 1/2/3 all Claude / all Codex
         // / as planned, Enter launches.
@@ -1567,10 +1600,10 @@ impl PlaneInput {
         let result = match self.tasks.iter_mut().rev().find(|r| r.asking.is_some()) {
             Some(r) => r.say(&text),
             None => match crate::agents::conductor() {
-                Conductor::Use(p) => self.start_task(&text, plane, p),
+                Conductor::Use(p) => return self.ask_team(p, plane),
                 Conductor::Missing => Err("tasks need claude or codex installed".into()),
                 Conductor::Ask => {
-                    self.picking_conductor = true;
+                    self.picking = Some(Picking::Conductor);
                     i.notice = Some(
                         "who conducts your tasks?  1 claude · 2 codex · esc cancels  \
 (kept in ~/.config/lama/config.json)"
@@ -1583,28 +1616,58 @@ impl PlaneInput {
         self.after_submit(result);
     }
 
-    fn start_task(
-        &mut self,
-        text: &str,
-        plane: &Plane,
-        conductor: crate::provider::Provider,
-    ) -> Result<(), String> {
-        let r = crate::task::run::Runner::start(text, known_projects(plane), conductor)?;
-        self.tasks.push(r);
-        Ok(())
+    /// Who runs the new task's agents: asked as you hand it over when both
+    /// are installed, so the team launches without waiting on you once the
+    /// conductor has dispatched.
+    fn ask_team(&mut self, conductor: crate::provider::Provider, plane: &Plane) {
+        if !crate::agents::installed().both() {
+            let result = self.start_task(conductor, crate::task::Team::AsPlanned, plane);
+            return self.after_submit(result);
+        }
+        self.picking = Some(Picking::Team(conductor));
+        if let Some(i) = self.intake.as_mut() {
+            i.notice = Some(
+                "who runs this task?  1 claude · 2 codex · 3 the conductor picks · esc cancels"
+                    .into(),
+            );
+        }
     }
 
-    /// The conductor asked about once picked: kept for later tasks, then
-    /// the waiting task starts on it.
-    fn pick_conductor(&mut self, p: crate::provider::Provider, plane: &Plane) {
-        self.picking_conductor = false;
+    /// The intake's draft as a new task.
+    fn start_task(
+        &mut self,
+        conductor: crate::provider::Provider,
+        team: crate::task::Team,
+        plane: &Plane,
+    ) -> Result<(), String> {
         let text = self
             .intake
             .as_ref()
             .map(|i| i.draft.trim().to_string())
             .unwrap_or_default();
-        let result =
-            crate::agents::save_conductor(p).and_then(|()| self.start_task(&text, plane, p));
+        let r = crate::task::run::Runner::start(&text, known_projects(plane), conductor, team)?;
+        self.tasks.push(r);
+        Ok(())
+    }
+
+    /// The conductor asked about once picked: kept for later tasks, then
+    /// who runs the waiting task.
+    fn pick_conductor(&mut self, p: crate::provider::Provider, plane: &Plane) {
+        self.picking = None;
+        match crate::agents::save_conductor(p) {
+            Ok(()) => self.ask_team(p, plane),
+            Err(e) => self.after_submit(Err(e)),
+        }
+    }
+
+    fn pick_team(
+        &mut self,
+        conductor: crate::provider::Provider,
+        team: crate::task::Team,
+        plane: &Plane,
+    ) {
+        self.picking = None;
+        let result = self.start_task(conductor, team, plane);
         self.after_submit(result);
     }
 
@@ -1756,6 +1819,11 @@ impl PlaneInput {
                     newer.tasks = std::mem::take(&mut older.tasks);
                     let (o, n) = (&older.conductor, &mut newer.conductor);
                     n.dispatching |= o.dispatching;
+                    // An older task waiting on you still shows its question.
+                    if newer.asking.is_none() {
+                        newer.asking = older.asking.take();
+                        newer.approving = older.approving;
+                    }
                     n.reading = n.reading.take().or_else(|| o.reading.clone());
                     n.routed += o.routed;
                     n.owners += o.owners;

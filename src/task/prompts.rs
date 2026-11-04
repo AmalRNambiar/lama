@@ -20,6 +20,7 @@ pub fn conductor(
     projects: &[PathBuf],
     me: Provider,
     have: crate::agents::Installed,
+    team: super::Team,
 ) -> String {
     let mut p = format!(
         "You are the conductor of lama task `{store_id}`: a dispatcher. You read a task, decide \
@@ -48,9 +49,12 @@ Owners can only run in these directories. Use them exactly as written in each ow
 `glab`) fail there, so read the source through the user's MCP servers, or ask for it to be \
 pasted.\n"
         }
-        Provider::Claude => "",
+        Provider::Claude => {
+            "A tool you may not use unasked goes to the user, who answers in lama: wait for it. \
+If they say no, go on without it.\n"
+        }
     };
-    let providers = provider_rule(have);
+    let providers = provider_rule(have, team);
     p.push_str(
         &"
 ## Be fast
@@ -75,7 +79,7 @@ tasks, the other owners' names and what to agree with them;
 - `goals`: a few checkable statements of done, which the owners tick;
 - `summary`: one line naming the task (e.g. `SHOP-42 configurable discount rules`).
 
-Then end your turn. lama asks the user who runs the owners and launches them.
+Then end your turn. lama launches the owners.
 
 ## Never
 Edit code, push, merge or deploy, or ask anyone to push to main/master, merge or deploy.
@@ -86,16 +90,27 @@ Edit code, push, merge or deploy, or ask anyone to push to main/master, merge or
     p
 }
 
-/// The `provider`/`model` rule of a plan: a suggestion between the two
-/// agents, or the one this machine has.
-fn provider_rule(have: crate::agents::Installed) -> String {
-    match (have.claude, have.codex) {
-        (true, false) => {
+/// The `provider`/`model` rule of a plan: the agent the user picked for
+/// the team, the one this machine has, or a suggestion between the two.
+fn provider_rule(have: crate::agents::Installed, team: super::Team) -> String {
+    use super::Team;
+    match (have.claude, have.codex, team) {
+        (true, true, Team::On(Provider::Claude)) => "- `provider`/`model`: always `claude` (the \
+user picked Claude for this task), with `sonnet` for most work, `opus` for hard cross-cutting work;"
+            .into(),
+        (true, true, Team::On(Provider::Codex)) => "- `provider`/`model`: always `codex` (the \
+user picked Codex for this task), with an empty model;"
+            .into(),
+        (true, true, Team::AsPlanned) => "- `provider`/`model`: your pick for each (`claude` with \
+`sonnet` for most work, `opus` for hard cross-cutting work; `codex` with an empty model) — the \
+user left it to you;"
+            .into(),
+        (true, false, _) => {
             "- `provider`/`model`: always `claude` (Codex isn't installed here), with \
 `sonnet` for most work, `opus` for hard cross-cutting work;"
                 .into()
         }
-        (false, true) => "- `provider`/`model`: always `codex` (Claude Code isn't installed \
+        (false, true, _) => "- `provider`/`model`: always `codex` (Claude Code isn't installed \
 here), with an empty model;"
             .into(),
         _ => "- `provider`/`model`: your suggestion (`claude` with `sonnet` for most work, `opus` \
@@ -225,6 +240,7 @@ bus.",
 mod tests {
     use super::*;
     use crate::task::Start;
+    use crate::task::Team;
 
     fn agent(name: &str, provider: Provider) -> PlannedAgent {
         PlannedAgent {
@@ -253,6 +269,7 @@ mod tests {
             &["/src/api".into(), "/src/web".into()],
             Provider::Claude,
             BOTH,
+            Team::Ask,
         );
         for must in [
             "dispatcher",
@@ -269,8 +286,14 @@ mod tests {
             assert!(p.contains(must), "missing {must:?}");
         }
         assert!(!p.contains("start_agent") && !p.contains("[lama bus] from"));
-        assert!(conductor("m1", &[], Provider::Claude, BOTH).contains("none found"));
+        assert!(conductor("m1", &[], Provider::Claude, BOTH, Team::Ask).contains("none found"));
         assert!(p.contains("the user chooses who runs it") && !p.contains("read-only"));
+        assert!(
+            p.contains("answers in lama"),
+            "a Claude conductor knows it can ask"
+        );
+        let picked = conductor("m1", &[], Provider::Claude, BOTH, Team::On(Provider::Codex));
+        assert!(picked.contains("always `codex` (the user picked Codex"));
     }
 
     #[test]
@@ -279,7 +302,7 @@ mod tests {
             claude: false,
             codex: true,
         };
-        let p = conductor("m1", &[], Provider::Codex, codex);
+        let p = conductor("m1", &[], Provider::Codex, codex, Team::Ask);
         assert!(p.contains("always `codex`"));
         assert!(
             p.contains("read-only and offline"),
